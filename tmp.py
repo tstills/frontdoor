@@ -6,9 +6,6 @@ import time
 import cv2
 
 # Construct the argument parse and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-c", "--codec", type=str, default="MJPG", help="codec of output video")
-args = vars(ap.parse_args())
 output_file = 'output.avi'
 fps = 20
 
@@ -19,7 +16,6 @@ vs = VideoStream(0).start()
 time.sleep(2.0)
 # initialize the FourCC, video writer, dimensions of the frame, and
 # zeros array
-print(*args["codec"])
 fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
 writer = None
 (h, w) = (None, None)
