@@ -9,29 +9,27 @@ import cv2
 output_file = 'output.avi'
 fps = 20
 
-# initialize the video stream and allow the camera
-# sensor to warmup
-print("[INFO] warming up camera...")
+# Initialize the video stream and allow the camera sensor to warmup
+print("Warming up camera...")
 vs = VideoStream(0).start()
 time.sleep(2.0)
-# initialize the FourCC, video writer, dimensions of the frame, and
-# zeros array
+
+# Initialize the FourCC, video writer, dimensions of the frame, and zeros array
 fourcc = cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
 writer = None
 (h, w) = (None, None)
 zeros = None
 
-# loop over frames from the video stream
+# Loop over frames from the video stream
 print('Starting')
 while True:
-    # grab the frame from the video stream and resize it to have a
-    # maximum width of 300 pixels
+    # Grab the frame from the video stream and resize it to have a maximum width of 300 pixels
     frame = vs.read()
     frame = imutils.resize(frame, width=300)
-    # check if the writer is None
+
+    # Check if the writer is None
     if writer is None:
-        # store the image dimensions, initialize the video writer,
-        # and construct the zeros array
+        # Store the image dimensions, initialize the video writer, and construct the zeros array
         (h, w) = frame.shape[:2]
         writer = cv2.VideoWriter(output_file, fourcc, fps, (w * 2, h * 2), True)
         zeros = np.zeros((h, w), dtype="uint8")
@@ -51,17 +49,20 @@ while True:
 #    output[0:h, w:w * 2] = R
 #    output[h:h * 2, w:w * 2] = G
 #    output[h:h * 2, 0:w] = B
-    # write the output frame to file
+
+    # Write the output frame to file
     writer.write(output)
 
-    # show the frames
+    # Show the frames
     cv2.imshow("Frame", frame)
     cv2.imshow("Output", output)
-    key = cv2.waitKey(1) & 0xFF
+
     # if the `q` key was pressed, break from the loop
+    key = cv2.waitKey(1) & 0xFF
     if key == ord("q"):
         break
-# do a bit of cleanup
+
+# Cleanup
 print("[INFO] cleaning up...")
 cv2.destroyAllWindows()
 vs.stop()
