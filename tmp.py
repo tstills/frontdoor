@@ -31,10 +31,11 @@ while True:
     if writer is None:
         # Store the image dimensions, initialize the video writer, and construct the zeros array
         (h, w) = frame.shape[:2]
-        writer = cv2.VideoWriter(output_file, fourcc, fps, (w * 2, h * 2), True)
+#        writer = cv2.VideoWriter(output_file, fourcc, fps, (w * 2, h * 2), True)
+        writer = cv2.VideoWriter(output_file, fourcc, fps, (w, h), True)
         zeros = np.zeros((h, w), dtype="uint8")
 
-    output = np.zeros((h * 2, w * 2, 3), dtype="uint8")
+    output = np.zeros((h, w, 3), dtype="uint8")
     output[0:h, 0:w] = frame
 
     # Write the output frame to file
