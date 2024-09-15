@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 from imutils.video import VideoStream
 from imutils.video import FPS
