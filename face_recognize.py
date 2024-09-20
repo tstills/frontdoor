@@ -2,6 +2,44 @@
 
 import cv2
 import face_recognition
+import os
+import pickle
+
+from imutils import paths
+
+# Read the known encodings from a pickle file.
+# If the pickle file doesn't exist, create it.
+def get_encodings():
+    if not os.path.isfile('encodings.pickle'):
+        print("Start processing images")
+        image_paths = list(paths.list_images("dataset"))
+
+        known_encodings = []
+        known_names = []
+
+        for (ii, image_path) in enumerate(image_paths):
+            print("Processing image {}/{}".format(ii+1, len(image_paths)))
+
+            name = image_path.split(os.path.sep)[-2]
+
+            image = cv2.imread(image_path)
+            rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            boxes = face_recognition.face_locations(rgb, model="hog")
+
+            encodings = face_recognition.face_encodings(rgb, boxes)
+
+            for encoding in encodings:
+                known_encodings.append(encoding)
+                known_names.append(name)
+
+        print("Serializing encodings")
+        data = {"encodings": known_encodings, "names": known_names}
+
+        f = open("encodings.pickle", "wb")
+        f.write(pickle.dumps(data))
+        f.close()
+
 
 def face_recognize():
 
@@ -38,6 +76,7 @@ def face_recognize():
     cv2.destroyAllWindows()
 
 def main():
+    known_encodings = get_encodings()
     face_recognize()
 
 if __name__ == "__main__":
