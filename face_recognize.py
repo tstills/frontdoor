@@ -4,6 +4,7 @@ import cv2
 import face_recognition
 import os
 import pickle
+import sys
 
 from imutils import paths
 
@@ -53,7 +54,12 @@ def face_recognize(known_encodings):
     cap = cv2.VideoCapture(0)
 
     while True:
+        name = 'Unknown'
+
         ret, frame = cap.read()
+        if not ret:
+            print('Unable to read from camera')
+            sys.exit(1)
 
         # Find all faces in the current frame
         faces_in_frame = face_recognition.face_locations(frame)
@@ -64,7 +70,7 @@ def face_recognize(known_encodings):
             matches = face_recognition.compare_faces(known_encodings["encodings"], encoding)
 
             # If a match is found...
-            if matches[0]:
+            if True in matches:
 
                 # Draw a box around the face
                 cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
