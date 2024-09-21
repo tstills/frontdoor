@@ -10,22 +10,24 @@ from imutils import paths
 # Read the known encodings from a pickle file.
 # If the pickle file doesn't exist, create it.
 def get_encodings():
-    if not os.path.isfile('encodings.pickle'):
-        print("Start processing images")
-        image_paths = list(paths.list_images("dataset"))
+    pickle_file = 'encodings.pickle'
+
+    if not os.path.isfile(pickle_file):
+        print('Start processing images')
+        image_paths = list(paths.list_images('dataset'))
 
         known_encodings = []
         known_names = []
 
         for (ii, image_path) in enumerate(image_paths):
-            print("Processing image {}/{}".format(ii+1, len(image_paths)))
+            print('Processing image {}/{}'.format(ii+1, len(image_paths)))
 
             name = image_path.split(os.path.sep)[-2]
 
             image = cv2.imread(image_path)
             rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-            boxes = face_recognition.face_locations(rgb, model="hog")
+            boxes = face_recognition.face_locations(rgb, model='hog')
 
             encodings = face_recognition.face_encodings(rgb, boxes)
 
@@ -33,15 +35,19 @@ def get_encodings():
                 known_encodings.append(encoding)
                 known_names.append(name)
 
-        print("Serializing encodings")
-        data = {"encodings": known_encodings, "names": known_names}
+        print('Serializing encodings')
+        data = {'encodings': known_encodings, 'names': known_names}
 
-        f = open("encodings.pickle", "wb")
+        f = open(pickle_file, 'wb')
         f.write(pickle.dumps(data))
         f.close()
+    else:
+        data = pickle.loads(open(pickle_file, 'rb').read())
+
+    return data
 
 
-def face_recognize():
+def face_recognize(known_encodings):
 
     # Load the known face image (replace with your image)
     known_image = face_recognition.load_image_file("dataset/Tim/IMG_2191.jpg")
@@ -84,10 +90,11 @@ def face_recognize():
 
 def main():
     known_encodings = get_encodings()
-    face_recognize()
+    face_recognize(known_encodings)
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
         print
+
