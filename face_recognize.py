@@ -50,12 +50,12 @@ def get_encodings():
 
 def face_recognize(known_encodings):
 
+    faces_found = []
+
     # Initialize video capture from the USB camera
     cap = cv2.VideoCapture(0)
 
     while True:
-        name = 'Unknown'
-
         ret, frame = cap.read()
         if not ret:
             print('Unable to read from camera')
@@ -70,15 +70,22 @@ def face_recognize(known_encodings):
             matches = face_recognition.compare_faces(known_encodings["encodings"], encoding)
 
             # If a match is found...
-            if True in matches:
+            match_found = False
+            for ii, match in enumerate(matches):
+                if match:
+                    # Decode the name
+                    name = known_encodings['names'][ii]
+                    if name not in faces_found:
+                        faces_found = name
+                        print(name)
 
-                # Draw a box around the face
-                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+                    # Draw a box around the face
+                    cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
 
-                # Draw a label with a name below the face
-                cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
-                font = cv2.FONT_HERSHEY_DUPLEX
-                cv2.putText(frame, 'Tim', (left + 6,  bottom - 6), font, 1.0, (255, 255, 255), 1)
+                    # Draw a label with a name below the face
+                    cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
+                    font = cv2.FONT_HERSHEY_DUPLEX
+                    cv2.putText(frame, name, (left + 6,  bottom - 6), font, 1.0, (255, 255, 255), 1)
 
         # Display the resulting image
         cv2.imshow('Video', frame)
