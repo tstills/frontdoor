@@ -49,10 +49,6 @@ def get_encodings():
 
 def face_recognize(known_encodings):
 
-    # Load the known face image (replace with your image)
-    known_image = face_recognition.load_image_file("dataset/Tim/IMG_2191.jpg")
-    known_encoding = face_recognition.face_encodings(known_image)[0]
-
     # Initialize video capture from the USB camera
     cap = cv2.VideoCapture(0)
 
@@ -65,7 +61,7 @@ def face_recognize(known_encodings):
 
         # Loop through each face in the frame
         for (top, right, bottom, left), encoding in zip(faces_in_frame, encodings_in_frame):
-            matches = face_recognition.compare_faces([known_encoding], encoding)
+            matches = face_recognition.compare_faces(known_encodings["encodings"], encoding)
 
             # If a match is found...
             if matches[0]:
