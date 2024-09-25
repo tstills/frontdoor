@@ -5,6 +5,7 @@ import face_recognition
 import os
 import pickle
 import sys
+import datetime
 
 from imutils import paths
 
@@ -65,27 +66,53 @@ def face_recognize(known_encodings):
         faces_in_frame = face_recognition.face_locations(frame)
         encodings_in_frame = face_recognition.face_encodings(frame, faces_in_frame)
 
-        # Loop through each face in the frame
-        for (top, right, bottom, left), encoding in zip(faces_in_frame, encodings_in_frame):
-            matches = face_recognition.compare_faces(known_encodings["encodings"], encoding)
+        # If there are any faces in the frame:
+        if encodings_in_frame:
 
-            # If a match is found...
-            match_found = False
-            for ii, match in enumerate(matches):
-                if match:
-                    # Decode the name
-                    name = known_encodings['names'][ii]
-                    if name not in faces_found:
-                        faces_found = name
-                        print(name)
+            # Get the current date and time
+            current_time = datetime.datetime.now()
+            time_string = current_time.strftime("%H:%M %m/%d/%Y")
 
-                    # Draw a box around the face
-                    cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+            # Define the font, scale, color, and thickness for the text
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 1
+            color = (255, 255, 255)  # White color for the text (B, G, R)
+            thickness = 2
 
-                    # Draw a label with a name below the face
-                    cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
-                    font = cv2.FONT_HERSHEY_DUPLEX
-                    cv2.putText(frame, name, (left + 6,  bottom - 6), font, 1.0, (255, 255, 255), 1)
+            # Get the size of the frame (height, width)
+            frame_height, frame_width, _ = frame.shape
+
+            # Calculate position for the text (lower left corner)
+            text_x = 10                 # Margin from the left edge
+            text_y = frame_height - 10  # Margin from the bottom edge
+
+            # Add the time string to the frame
+#            cv2.putText(frame, current_time, (text_x, text_y), font, font_scale, color, 1)
+
+            # Loop through each face in the frame
+            for (top, right, bottom, left), encoding in zip(faces_in_frame, encodings_in_frame):
+                matches = face_recognition.compare_faces(known_encodings["encodings"], encoding)
+
+                # If a match is found...
+                match_found = False
+                for ii, match in enumerate(matches):
+                    if match:
+                        # Decode the name
+                        name = known_encodings['names'][ii]
+                        if name not in faces_found:
+                            faces_found = name
+                            print(name)
+
+                        # Draw a box around the face
+                        cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+
+                        # Draw a label with a name below the face
+                        cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
+                        font = cv2.FONT_HERSHEY_DUPLEX
+                        cv2.putText(frame, name, (left + 6,  bottom - 6), font, 1.0, (255, 255, 255), 1)
+
+            # Write the frame to disk
+            cv2.imwrite('captured_frame.jpg', frame)
 
         # Display the resulting image
         cv2.imshow('Video', frame)
