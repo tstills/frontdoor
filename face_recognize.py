@@ -6,8 +6,13 @@ import os
 import pickle
 import sys
 import datetime
+import time
+
+from RPi import GPIO
 
 from imutils import paths
+
+MOTION_DETECT_PIN = 22
 
 # Read the known encodings from a pickle file.
 # If the pickle file doesn't exist, create it.
@@ -48,13 +53,25 @@ def get_encodings():
 
     return data
 
-
+#
+#  Do face recognition
+#
 def face_recognize(known_encodings):
+    time_diffs = []
+    count = 0
 
     faces_found = []
 
     # Initialize video capture from the USB camera
     cap = cv2.VideoCapture(0)
+
+    # Keep track of how many faces we've found
+    last_face_count = -1
+    face_count = 0
+    last_match_count = -1
+    match_count = 0
+    last_unix_time = 0
+    count = 0
 
     while True:
         ret, frame = cap.read()
@@ -89,11 +106,15 @@ def face_recognize(known_encodings):
             # Loop through each face in the frame
             for (top, right, bottom, left), encoding in zip(faces_in_frame, encodings_in_frame):
                 matches = face_recognition.compare_faces(known_encodings["encodings"], encoding)
+                face_count += 1
 
                 # If a match is found...
                 match_found = False
                 for ii, match in enumerate(matches):
                     if match:
+                        # Increment the face count
+                        match_count += 1
+
                         # Decode the name
                         name = known_encodings['names'][ii]
                         if name not in faces_found:
@@ -106,14 +127,25 @@ def face_recognize(known_encodings):
                         # Draw a label with a name below the face
                         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
                         font = cv2.FONT_HERSHEY_DUPLEX
-#                        cv2.putText(frame, name, (left + 6,  bottom - 6), font, 1.0, (255, 255, 255), 1)
                         cv2.putText(frame, name, (left + 6,  bottom - 6), font, 1.0, (255, 255, 255), 1)
 
-                        # Add the time string to the frame
-                        cv2.putText(frame, time_string, (text_x, text_y), font, font_scale, color, 1)
+            # Add the time string to the frame
+            cv2.putText(frame, time_string, (text_x, text_y), font, font_scale, color, 1)
 
             # Write the frame to disk
-            cv2.imwrite('captured_frame.jpg', frame)
+#            if (match_count):
+#                ((match_count == 0) && (face_count > last_face_count)):
+#                cv2.imwrite('captured_frame.jpg', frame)
+#                last_face_count = face_count
+            file_name = 'images/image_'
+            if count < 100:
+                file_name += '0'
+            if count < 10:
+                file_name += '0'
+            file_name = '%s%d' % (file_name, count)
+            file_name += '.jpg'
+            cv2.imwrite(file_name, frame)
+            count += 1
 
         # Display the resulting image
         cv2.imshow('Video', frame)
@@ -125,9 +157,30 @@ def face_recognize(known_encodings):
     cap.release()
     cv2.destroyAllWindows()
 
+#
+#  Callback function for the motion detection interrupt
+#
+def motion_detect_callback(channel):
+    print('Motion detected on GPIO channel {}'.format(channel))
+
+#
+#  Main function
+#
 def main():
+    # Set up the GPIO pins
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(MOTION_DETECT_PIN, GPIO.IN)
+
     known_encodings = get_encodings()
-    face_recognize(known_encodings)
+#    face_recognize(known_encodings)
+
+    while True:
+        # Poll the active low motion detect pin
+        # I hate doing this by polling, but I get a weird runtime exception when I setup the interrrupt
+        if GPIO.input(MOTION_DETECT_PIN):
+            print('Motion detected')
+            face_recognize(known_encodings)
+            time.sleep(1)
 
 if __name__ == "__main__":
     try:
