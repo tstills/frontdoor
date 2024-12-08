@@ -17,8 +17,8 @@ frame_count = 0
 start_time = time.time()
 fps = 0
 
-def process_frame(frame):
-    global face_locations, face_encodings, face_names, known_face_encodings, known_face_names
+def process_frame(frame, known_face_encodings, known_face_names):
+    global face_locations, face_encodings, face_names
 
     
     # Resize the frame using cv_scaler to increase performance (less pixels processed, less time spent)
@@ -76,7 +76,7 @@ def calculate_fps():
     return fps
 
 def main():
-    global known_face_encodings, known_face_names
+    
 
     # Load pre-trained face encodings
     print("[INFO] loading encodings...")
@@ -95,7 +95,7 @@ def main():
         frame = picam2.capture_array()
     
         # Process the frame with the function
-        processed_frame = process_frame(frame)
+        processed_frame = process_frame(frame, known_face_encodings, known_face_names)
     
         # Get the text and boxes to be drawn based on the processed frame
         display_frame = draw_results(processed_frame)
