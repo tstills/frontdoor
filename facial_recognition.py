@@ -1,21 +1,11 @@
+#!/usr/bin/env python
+
 import face_recognition
 import cv2
 import numpy as np
 from picamera2 import Picamera2
 import time
 import pickle
-
-# Load pre-trained face encodings
-print("[INFO] loading encodings...")
-with open("encodings.pickle", "rb") as f:
-    data = pickle.loads(f.read())
-known_face_encodings = data["encodings"]
-known_face_names = data["names"]
-
-# Initialize the camera
-picam2 = Picamera2()
-picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (1920, 1080)}))
-picam2.start()
 
 # Initialize our variables
 cv_scaler = 4 # this has to be a whole number
@@ -28,7 +18,8 @@ start_time = time.time()
 fps = 0
 
 def process_frame(frame):
-    global face_locations, face_encodings, face_names
+    global face_locations, face_encodings, face_names, known_face_encodings, known_face_names
+
     
     # Resize the frame using cv_scaler to increase performance (less pixels processed, less time spent)
     resized_frame = cv2.resize(frame, (0, 0), fx=(1/cv_scaler), fy=(1/cv_scaler))
@@ -84,30 +75,52 @@ def calculate_fps():
         start_time = time.time()
     return fps
 
-while True:
-    # Capture a frame from camera
-    frame = picam2.capture_array()
-    
-    # Process the frame with the function
-    processed_frame = process_frame(frame)
-    
-    # Get the text and boxes to be drawn based on the processed frame
-    display_frame = draw_results(processed_frame)
-    
-    # Calculate and update FPS
-    current_fps = calculate_fps()
-    
-    # Attach FPS counter to the text and boxes
-    cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (display_frame.shape[1] - 150, 30), 
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-    
-    # Display everything over the video feed.
-    cv2.imshow('Video', display_frame)
-    
-    # Break the loop and stop the script if 'q' is pressed
-    if cv2.waitKey(1) == ord("q"):
-        break
+def main():
+    global known_face_encodings, known_face_names
 
-# By breaking the loop we run this code here which closes everything
-cv2.destroyAllWindows()
-picam2.stop()
+    # Load pre-trained face encodings
+    print("[INFO] loading encodings...")
+    with open("encodings.pickle", "rb") as f:
+        data = pickle.loads(f.read())
+    known_face_encodings = data["encodings"]
+    known_face_names = data["names"]
+
+    # Initialize the camera
+    picam2 = Picamera2()
+    picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (1920, 1080)}))
+    picam2.start()
+
+    while True:
+        # Capture a frame from camera
+        frame = picam2.capture_array()
+    
+        # Process the frame with the function
+        processed_frame = process_frame(frame)
+    
+        # Get the text and boxes to be drawn based on the processed frame
+        display_frame = draw_results(processed_frame)
+    
+        # Calculate and update FPS
+        current_fps = calculate_fps()
+    
+        # Attach FPS counter to the text and boxes
+        cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (display_frame.shape[1] - 150, 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+    
+        # Display everything over the video feed.
+        cv2.imshow('Video', display_frame)
+    
+        # Break the loop and stop the script if 'q' is pressed
+        if cv2.waitKey(1) == ord("q"):
+            break
+
+    # By breaking the loop we run this code here which closes everything
+    cv2.destroyAllWindows()
+    picam2.stop()
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print
+
