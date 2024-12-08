@@ -8,6 +8,8 @@ import sys
 import datetime
 import time
 
+from picamera2 import Picamera2
+
 from RPi import GPIO
 
 from imutils import paths
@@ -63,7 +65,7 @@ def face_recognize(known_encodings):
     faces_found = []
 
     # Initialize video capture from the USB camera
-    cap = cv2.VideoCapture(0)
+#    cap = cv2.VideoCapture(0)
 
     # Keep track of how many faces we've found
     last_face_count = -1
@@ -72,6 +74,10 @@ def face_recognize(known_encodings):
     match_count = 0
     last_unix_time = 0
     count = 0
+
+    picam2 = Picamera2()
+    picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (1920, 1080)}))
+    picam2.start()
 
     while True:
         ret, frame = cap.read()
