@@ -61,7 +61,8 @@ def draw_results(frame, face_locations, face_names):
     return frame
 
 def calculate_fps():
-    global frame_count, start_time, fps
+    global frame_count, start_time
+    fps = 0
     frame_count += 1
     elapsed_time = time.time() - start_time
     if elapsed_time > 1:
