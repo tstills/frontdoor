@@ -10,15 +10,11 @@ import pickle
 # Initialize our variables
 cv_scaler = 4 # this has to be a whole number
 
-face_locations = []
-face_encodings = []
-face_names = []
 frame_count = 0
 start_time = time.time()
 fps = 0
 
 def process_frame(frame, known_face_encodings, known_face_names):
-    global face_locations, face_encodings, face_names
 
     # Resize the frame using cv_scaler to increase performance (less pixels processed, less time spent)
     resized_frame = cv2.resize(frame, (0, 0), fx=(1/cv_scaler), fy=(1/cv_scaler))
@@ -43,9 +39,9 @@ def process_frame(frame, known_face_encodings, known_face_names):
             name = known_face_names[best_match_index]
         face_names.append(name)
 
-    return frame
+    return frame, face_locations, face_encodings, face_names
 
-def draw_results(frame):
+def draw_results(frame, face_locations, face_names):
     # Display the results
     for (top, right, bottom, left), name in zip(face_locations, face_names):
         # Scale back up face locations since the frame we detected in was scaled
@@ -93,10 +89,11 @@ def main():
         frame = picam2.capture_array()
 
         # Process the frame with the function
-        processed_frame = process_frame(frame, known_face_encodings, known_face_names)
+        processed_frame, face_locations, face_encodings, face_names = \
+                process_frame(frame, known_face_encodings, known_face_names)
 
         # Get the text and boxes to be drawn based on the processed frame
-        display_frame = draw_results(processed_frame)
+        display_frame = draw_results(processed_frame, face_locations, face_names)
 
         # Calculate and update FPS
         current_fps = calculate_fps()
