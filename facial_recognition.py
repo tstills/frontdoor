@@ -12,7 +12,6 @@ cv_scaler = 4 # this has to be a whole number
 
 frame_count = 0
 start_time = time.time()
-fps = 0
 
 def process_frame(frame, known_face_encodings, known_face_names):
 
