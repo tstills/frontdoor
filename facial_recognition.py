@@ -6,10 +6,10 @@ import numpy as np
 from picamera2 import Picamera2
 import time
 import pickle
+import datetime
+import re
 
-# Initialize our variables
 cv_scaler = 4 # this has to be a whole number
-
 frame_count = 0
 start_time = time.time()
 
@@ -71,7 +71,6 @@ def calculate_fps():
     return fps
 
 def main():
-
     # Load pre-trained face encodings
     print("[INFO] loading encodings...")
     with open("encodings.pickle", "rb") as f:
@@ -99,8 +98,23 @@ def main():
         current_fps = calculate_fps()
 
         # Attach FPS counter to the text and boxes
-        cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (display_frame.shape[1] - 150, 30), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        frame_height, frame_width, _ = display_frame.shape
+        text_x = 10                 # Margin from the left edge
+        text_y = frame_height - 10  # Margin from the bottom edge
+        color = (0, 255, 0)  # White color for the text (B, G, R)
+        font_scale = 1
+        font = cv2.FONT_HERSHEY_DUPLEX
+        cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (text_x, text_y), 
+                    font, font_scale, color, 1)
+
+        # Get the current time
+        current_time = datetime.datetime.now()
+        time_string = current_time.strftime("%m/%d/%y %I:%M%p").lstrip('0')
+        time_string = re.sub(' 0', ' ', time_string)
+
+        # Add the time string to the frame
+        text_y = frame_height - 40  # Margin from the bottom edge
+        cv2.putText(display_frame, time_string, (text_x, text_y), font, font_scale, color, 1)
 
         # Display everything over the video feed.
         cv2.imshow('Video', display_frame)
