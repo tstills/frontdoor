@@ -131,6 +131,8 @@ def main():
                 # Break the loop and stop the script if 'q' is pressed
                 if cv2.waitKey(1) == ord("q"):
                     break
+        else:
+            time.sleep(1)
 
     # By breaking the loop we run this code here which closes everything
     cv2.destroyAllWindows()
