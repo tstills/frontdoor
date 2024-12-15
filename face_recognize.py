@@ -14,7 +14,7 @@ from RPi import GPIO
 
 from imutils import paths
 
-MOTION_DETECT_PIN = 22
+MOTION_DETECT_PIN_N = 22
 
 # Read the known encodings from a pickle file.
 # If the pickle file doesn't exist, create it.
@@ -175,7 +175,7 @@ def motion_detect_callback(channel):
 def main():
     # Set up the GPIO pins
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(MOTION_DETECT_PIN, GPIO.IN)
+    GPIO.setup(MOTION_DETECT_PIN_N, GPIO.IN)
 
     known_encodings = get_encodings()
 #    face_recognize(known_encodings)
@@ -183,7 +183,7 @@ def main():
     while True:
         # Poll the active low motion detect pin
         # I hate doing this by polling, but I get a weird runtime exception when I setup the interrrupt
-        if GPIO.input(MOTION_DETECT_PIN):
+        if not GPIO.input(MOTION_DETECT_PIN_N):
             print('Motion detected')
             face_recognize(known_encodings)
             time.sleep(1)
