@@ -90,46 +90,47 @@ def main():
         if not GPIO.input(MOTION_DETECT_PIN_N):
             print("Motion detected.")
 
+            # Do facial recognition and record as long as motion is detected
+            while not GPIO.input(MOTION_DETECT_PIN_N):
 
+                # Capture a frame from camera
+                frame = picam2.capture_array()
 
-        # Capture a frame from camera
-        frame = picam2.capture_array()
+                # Process the frame with the function
+                processed_frame, face_locations, face_encodings, face_names = \
+                        process_frame(frame, known_face_encodings, known_face_names)
 
-        # Process the frame with the function
-        processed_frame, face_locations, face_encodings, face_names = \
-                process_frame(frame, known_face_encodings, known_face_names)
+                # Get the text and boxes to be drawn based on the processed frame
+                display_frame = draw_results(processed_frame, face_locations, face_names)
 
-        # Get the text and boxes to be drawn based on the processed frame
-        display_frame = draw_results(processed_frame, face_locations, face_names)
+                # Calculate and update FPS
+                current_fps = calculate_fps()
 
-        # Calculate and update FPS
-        current_fps = calculate_fps()
+                # Attach FPS counter to the text and boxes
+                frame_height, frame_width, _ = display_frame.shape
+                text_x = 10                 # Margin from the left edge
+                text_y = frame_height - 10  # Margin from the bottom edge
+                color = (0, 255, 0)         # White color for the text (B, G, R)
+                font_scale = 1
+                font = cv2.FONT_HERSHEY_DUPLEX
+                cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (text_x, text_y), 
+                            font, font_scale, color, 1)
 
-        # Attach FPS counter to the text and boxes
-        frame_height, frame_width, _ = display_frame.shape
-        text_x = 10                 # Margin from the left edge
-        text_y = frame_height - 10  # Margin from the bottom edge
-        color = (0, 255, 0)  # White color for the text (B, G, R)
-        font_scale = 1
-        font = cv2.FONT_HERSHEY_DUPLEX
-        cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (text_x, text_y), 
-                    font, font_scale, color, 1)
+                # Get the current time
+                current_time = datetime.datetime.now()
+                time_string = current_time.strftime("%m/%d/%y %I:%M%p").lstrip('0')
+                time_string = re.sub(' 0', ' ', time_string)
 
-        # Get the current time
-        current_time = datetime.datetime.now()
-        time_string = current_time.strftime("%m/%d/%y %I:%M%p").lstrip('0')
-        time_string = re.sub(' 0', ' ', time_string)
+                # Add the time string to the frame
+                text_y = frame_height - 40  # Margin from the bottom edge
+                cv2.putText(display_frame, time_string, (text_x, text_y), font, font_scale, color, 1)
 
-        # Add the time string to the frame
-        text_y = frame_height - 40  # Margin from the bottom edge
-        cv2.putText(display_frame, time_string, (text_x, text_y), font, font_scale, color, 1)
+                # Display everything over the video feed.
+                cv2.imshow('Video', display_frame)
 
-        # Display everything over the video feed.
-        cv2.imshow('Video', display_frame)
-
-        # Break the loop and stop the script if 'q' is pressed
-        if cv2.waitKey(1) == ord("q"):
-            break
+                # Break the loop and stop the script if 'q' is pressed
+                if cv2.waitKey(1) == ord("q"):
+                    break
 
     # By breaking the loop we run this code here which closes everything
     cv2.destroyAllWindows()
