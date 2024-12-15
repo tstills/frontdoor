@@ -87,6 +87,11 @@ def main():
 
     # Poll the motion detect once a second
     while True:
+        if not GPIO.input(MOTION_DETECT_PIN_N):
+            print("Motion detected.")
+
+
+
         # Capture a frame from camera
         frame = picam2.capture_array()
 
