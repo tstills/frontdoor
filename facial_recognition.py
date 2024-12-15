@@ -69,6 +69,10 @@ def calculate_fps():
     return fps
 
 def main():
+    # Set up the GPIO pins
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(MOTION_DETECT_PIN_N, GPIO.IN)
+
     # Load pre-trained face encodings
     print("[INFO] loading encodings...")
     with open("encodings.pickle", "rb") as f:
@@ -81,6 +85,7 @@ def main():
     picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (1920, 1080)}))
     picam2.start()
 
+    # Poll the motion detect once a second
     while True:
         # Capture a frame from camera
         frame = picam2.capture_array()
