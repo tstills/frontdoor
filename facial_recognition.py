@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
-import face_recognition
-import cv2
-import numpy as np
+import cv2, datetime, face_recognition, numpy, pickle, re, time
+
 from picamera2 import Picamera2
-import time
-import pickle
-import datetime
-import re
+from RPi import GPIO
+
+MOTION_DETECT_PIN_N = 22
 
 cv_scaler = 4 # this has to be a whole number
 frame_count = 0
@@ -33,7 +31,7 @@ def process_frame(frame, known_face_encodings, known_face_names):
 
         # Use the known face with the smallest distance to the new face
         face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-        best_match_index = np.argmin(face_distances)
+        best_match_index = numpy.argmin(face_distances)
         if matches[best_match_index]:
             name = known_face_names[best_match_index]
         face_names.append(name)
