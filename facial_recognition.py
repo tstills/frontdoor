@@ -102,6 +102,8 @@ def create_video_from_images(image_folder, output_video, fps=30):
     print(f"Video saved as {output_video}")
 
 def main():
+    global frame_count, start_time
+
     # Set up the GPIO pins
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(MOTION_DETECT_PIN_N, GPIO.IN)
@@ -122,16 +124,20 @@ def main():
     os.system('rm -f images/*')
 
     # Poll the motion detect once a second
+    print('Starting')
     while True:
         if not GPIO.input(MOTION_DETECT_PIN_N):
             print("Motion detected.")
+            frame_count = 0
             start_time = time.time()
+            print('start_time = %.1f' % start_time)       # !!!
             count = 0
 
             # Do facial recognition and record as long as motion is detected
             while not GPIO.input(MOTION_DETECT_PIN_N):
 
                 # Capture a frame from camera
+                print('Capture frame: %.1f' % time.time())  # !!!
                 frame = picam2.capture_array()
 
                 # Process the frame with the function
@@ -151,8 +157,8 @@ def main():
                 color = (0, 255, 0)         # White color for the text (B, G, R)
                 font_scale = 1
                 font = cv2.FONT_HERSHEY_DUPLEX
-                cv2.putText(display_frame, f"FPS: {current_fps:.1f}", (text_x, text_y), 
-                            font, font_scale, color, 1)
+                fps_string = 'FPS: %.1f' % current_fps
+                cv2.putText(display_frame, fps_string, (text_x, text_y), font, font_scale, color, 1)
 
                 # Get the current time
                 current_time = datetime.datetime.now()
@@ -181,8 +187,16 @@ def main():
                 if cv2.waitKey(1) == ord("q"):
                     break
 
-            # Terminate for now
-            print('Process video')
+            current_fps = 3.2
+
+            # Convert the images to a video
+            start_time = time.time()
+            current_time = datetime.datetime.now()
+            time_string = current_time.strftime("%Y-%m-%d_%H:%M")
+            file_name = 'videos/' + time_string + '.mp4'
+            create_video_from_images('images', file_name, current_fps)
+            print('Process time: %.1fs' % (time.time() - start_time))
+            print('')       # !!!
 
         else:
             time.sleep(1)
@@ -196,4 +210,3 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print
-
