@@ -8,8 +8,6 @@ from RPi import GPIO
 MOTION_DETECT_PIN_N = 22
 
 cv_scaler = 4 # this has to be a whole number
-frame_count = 0
-start_time = time.time()
 
 def process_frame(frame, known_face_encodings, known_face_names):
 
@@ -57,17 +55,6 @@ def draw_results(frame, face_locations, face_names):
 
     return frame
 
-def calculate_fps():
-    global frame_count, start_time
-    fps = 0
-    frame_count += 1
-    elapsed_time = time.time() - start_time
-    if elapsed_time > 1:
-        fps = frame_count / elapsed_time
-        frame_count = 0
-        start_time = time.time()
-    return fps
-
 def create_video_from_images(image_folder, output_video, fps=30):
     # Get all image file names from the directory
     images = [img for img in os.listdir(image_folder) if img.endswith(".jpg") or img.endswith(".jpeg")]
@@ -99,11 +86,8 @@ def create_video_from_images(image_folder, output_video, fps=30):
 
     # Release the VideoWriter object
     video.release()
-    print(f"Video saved as {output_video}")
 
 def main():
-    global frame_count, start_time
-
     # Set up the GPIO pins
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(MOTION_DETECT_PIN_N, GPIO.IN)
@@ -120,25 +104,23 @@ def main():
     picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (1920, 1080)}))
     picam2.start()
 
-    # Clear the images directory
-    os.system('rm -f images/*')
-
     # Poll the motion detect once a second
     print('Starting')
     while True:
         if not GPIO.input(MOTION_DETECT_PIN_N):
             print("Motion detected.")
-            frame_count = 0
             start_time = time.time()
-            print('start_time = %.1f' % start_time)       # !!!
-            count = 0
+            print('Start time: %.1f' % start_time)
+            os.system('rm -f images/*')
+            frame_count = 0
+            image_count = 0
 
             # Do facial recognition and record as long as motion is detected
             while not GPIO.input(MOTION_DETECT_PIN_N):
 
                 # Capture a frame from camera
-                print('Capture frame: %.1f' % time.time())  # !!!
                 frame = picam2.capture_array()
+                frame_count += 1
 
                 # Process the frame with the function
                 processed_frame, face_locations, face_encodings, face_names = \
@@ -147,18 +129,12 @@ def main():
                 # Get the text and boxes to be drawn based on the processed frame
                 display_frame = draw_results(processed_frame, face_locations, face_names)
 
-                # Calculate and update FPS
-                current_fps = calculate_fps()
-
                 # Attach FPS counter to the text and boxes
                 frame_height, frame_width, _ = display_frame.shape
-                text_x = 10                 # Margin from the left edge
-                text_y = frame_height - 10  # Margin from the bottom edge
-                color = (0, 255, 0)         # White color for the text (B, G, R)
+                text_x = 10           # Margin from the left edge
+                color = (0, 255, 0)   # White color for the text (B, G, R)
                 font_scale = 1
                 font = cv2.FONT_HERSHEY_DUPLEX
-                fps_string = 'FPS: %.1f' % current_fps
-                cv2.putText(display_frame, fps_string, (text_x, text_y), font, font_scale, color, 1)
 
                 # Get the current time
                 current_time = datetime.datetime.now()
@@ -166,7 +142,7 @@ def main():
                 time_string = re.sub(' 0', ' ', time_string)
 
                 # Add the time string to the frame
-                text_y = frame_height - 40  # Margin from the bottom edge
+                text_y = frame_height - 10  # Margin from the bottom edge
                 cv2.putText(display_frame, time_string, (text_x, text_y), font, font_scale, color, 1)
 
                 # Display everything over the video feed.
@@ -174,29 +150,30 @@ def main():
 
                 # Write the frame to disk
                 file_name = 'images/image_'
-                if count < 100:
+                if image_count < 100:
                     file_name += '0'
-                if count < 10:
+                if image_count < 10:
                     file_name += '0'
-                file_name = '%s%d' % (file_name, count)
+                file_name = '%s%d' % (file_name, image_count)
                 file_name += '.jpg'
                 cv2.imwrite(file_name, frame)
-                count += 1
+                image_count += 1
 
                 # Break the loop and stop the script if 'q' is pressed
                 if cv2.waitKey(1) == ord("q"):
                     break
 
-            current_fps = 3.2
-
             # Convert the images to a video
-            start_time = time.time()
+            now = time.time()
+            print('End time: %.1f' % now)
+            print('Frame count: %d' % frame_count)
             current_time = datetime.datetime.now()
             time_string = current_time.strftime("%Y-%m-%d_%H:%M")
             file_name = 'videos/' + time_string + '.mp4'
-            create_video_from_images('images', file_name, current_fps)
-            print('Process time: %.1fs' % (time.time() - start_time))
-            print('')       # !!!
+            fps = frame_count / (now - start_time)
+            print('%.1f fps' % fps)
+            create_video_from_images('images', file_name, fps)
+            print('Process time: %.1fs' % (time.time() - now))
 
         else:
             time.sleep(1)
