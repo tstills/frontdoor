@@ -111,7 +111,7 @@ def main():
             print("Motion detected.")
             start_time = time.time()
             print('Start time: %.1f' % start_time)
-            os.system('rm -f images/*')
+            os.system('rm -f images/* videos/*')
             frame_count = 0
             image_count = 0
 
@@ -123,8 +123,7 @@ def main():
                 frame_count += 1
 
                 # Process the frame with the function
-                processed_frame, face_locations, face_encodings, face_names = \
-                        process_frame(frame, known_face_encodings, known_face_names)
+                processed_frame, face_locations, face_encodings, face_names = process_frame(frame, known_face_encodings, known_face_names)
 
                 # Get the text and boxes to be drawn based on the processed frame
                 display_frame = draw_results(processed_frame, face_locations, face_names)
